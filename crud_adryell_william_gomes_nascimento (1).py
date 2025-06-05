@@ -12,6 +12,23 @@ def menup():
 
   """)
 
+from google.colab import drive, files
+
+def carregar_dados():
+    try:
+        with open("dados.json", "r") as arquivo:
+            dados = json.load(arquivo)
+            return dados.get("clientes", []), dados.get("produtos", []), dados.get("vendas", [])
+    except FileNotFoundError:
+        return [], [], []
+
+def salvar_dados(clientes, produtos, vendas):
+    dados = {"clientes": clientes, "produtos": produtos, "vendas": vendas}
+    with open("dados.json", "w") as arquivo:
+        json.dump(dados, arquivo, indent=4)
+
+clientes, produtos, vendas = carregar_dados()
+
 def cadp(produtos):
   id = input("Digite o indentificador do produto: ")
   qtd = int(input("Digite a quantidade do produto no estoque: "))
@@ -195,7 +212,8 @@ def lisfp():
 
   print("\nLista de Clientes:")
   for fornec in clientes:
-        print(f"Nome: {fornec['Nome']}, Produto: {fornec['Produto']}, Telefone: {fornec['Telefone']}, Endereço: {fornec['Endereço']}")
+        print(f"Nome: {fornec.get('Nome', 'N/A')}, Telefone: {fornec.get('Telefone', 'N/A')}, E-mail: {fornec.get('Email', 'N/A')}")
+
 
 def verp():
   if not produtos:
@@ -211,31 +229,6 @@ def verp():
       return
   else:
     print("Produto não encontrado")
-
-def salvar_dados():
-    dados = {"clientes": clientes, "produtos": produtos, "vendas": vendas}
-    with open("dados.json", "w") as arquivo:
-        json.dump(dados, arquivo, indent=4)
-
-def carregar_dados():
-    global clientes, produtos, vendas
-    try:
-        with open("dados.json", "r") as arquivo:
-            dados = json.load(arquivo)
-            clientes = dados.get("clientes", [])
-            produtos = dados.get("produtos", [])
-            vendas = dados.get("vendas", [])
-    except FileNotFoundError:
-        clientes = []
-        produtos = []
-        vendas = []
-
-import json
-
-def salvar_dados():
-    dados = {"clientes": clientes, "produtos": produtos, "vendas": vendas}
-    with open("dados.json", "w") as arquivo:
-        json.dump(dados, arquivo, indent=4)
 
 def carregar_dados():
     global clientes, produtos, vendas
@@ -274,9 +267,9 @@ def compp(clientes, produtos, vendas):
                             }
                             vendas.append(venda)
                             produto['quantidade'] -= qtd
-                            salvar_dados()
+                            salvar_dados(clientes, produtos, vendas)
                             print(f"Compra realizada com sucesso por {nome_cliente}! Restam {produto['quantidade']} unidades.")
-                            
+
                             continuar = input("Deseja comprar mais produtos? (s/n): ").lower()
                             if continuar != "s":
                                 return
@@ -293,18 +286,16 @@ def rele(vendas):
     print(f"Cliente: {venda['Cliente']}, ID do produto: {venda['ID do Produto']}, Quantidade comprada: {venda['Quantidade_cpd']}, preço da venda: {venda['Preço Total']:.2f}")
 
 carregar_dados()
-
 clientes = []
 produtos = []
 vendas = []
 
 def maine():
-    global vendas
+    global clientes, produtos, vendas
+    carregar_dados()
     while True:
-
         print("""
             Menu de Estoque
-
             1 - Listar Produtos
             2 - Verificar estoque
             3 - Comprar produto
@@ -328,8 +319,11 @@ def maine():
         elif opcao == "6":
             mainp()
         elif opcao == "0":
-            salvar_dados()
+            salvar_dados(clientes, produtos, vendas)
+            files.download('dados.json')
             break
         else:
             print("Opção inválida")
+
+
 maine()
